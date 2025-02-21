@@ -2,7 +2,10 @@
 
 A RoboFont extension that allows you to quickly add anchors to your font.
 
-> Warning: This is an extension that was built with beginner students of Latin-centric typeface design in mind. This is not (yet) a comprehensive tool for multi-script type production.
+## A warning of the tool’s biases
+- This is an extension that was built with beginner students of Latin-centric typeface design in mind.
+- This tool attempts to consolidate handling of anchors with their underscored counterpart (e.g. "top" and "_top") into one.
+- There are certain assumptions that are current hard-coded into the tool, such as the educated-guess x-positioning based on the glyph shape and anchor name, and the assumption that accent glyphs (e.g. acute, acutecmb) should get anchors which have an underscore at the beginning of their name.
 
 ## User Interface
 
@@ -15,7 +18,7 @@ This is where you define which anchor names you’d like to insert into your fon
 ###  Glyph Table
 This is where you define which glyphs will get the anchor that is currently selected in the left table. You made add, remove, or edit rows.
 
-|  |  |
+| Column | Description |
 | --- | --- |
 | **Drop** | If this box is checked, the anchor will be added to the glyph here. If this box is unchecked, it will be ignored when you click "Drop Anchors". This is useful if you'd like to have a working list and temporarily want to avoid adding an anchor without destructively deleting the whole row from the table. |
 | **Glyph Name** | This is the name of the glyph that will receive the anchor in question. |
@@ -29,7 +32,7 @@ This is where you can control the settings for the extension.
 #### Overwrite Anchors
 If you check this box, anchors of the same name in the same glyph will be overwritten when added to your font.
 
-|  |  |
+| Operation | Description |
 | --- | --- |
 | **Save Settings** | You may save your anchor/glyph settings to an external, proprietary `.anchorDropperSettings` preferences file, for use later. This is helpful if you have specific settings for specific type projects. |
 | **Load Settings** | You may load your `.anchorDropperSettings` file, or you can import a `.glyphConstruction` file (experimental) and Anchor Dropper will do its best to convert it to an Anchor Dropper setup. |
