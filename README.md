@@ -15,7 +15,7 @@ A RoboFont extension that allows you to quickly add anchors to your font.
 
 ### Anchor Table
 This is where you define which anchor names you’d like to insert into your font. You made add, remove, or rename rows.
-> Note: Anchor Dropper will attempt to insert an underscore "_" before your anchor name automatically, when the glyph is an accent.
+> Note: When the glyph is an accent, Anchor Dropper will insert an underscore "_" before your anchor name automatically.
 
 ###  Glyph Table
 This is where you define which glyphs will get the anchor that is currently selected in the left table. You made add, remove, or edit rows.
