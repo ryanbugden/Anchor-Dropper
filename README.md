@@ -52,4 +52,6 @@ This button will look at each glyph and make sure you don’t have two anchors o
 This button will add the anchors to your Current Font.
 
 
-
+## Special Thanks
+- Frederik Berlaen, for GlyphConstruction
+- Tal Leming, for EZUI
