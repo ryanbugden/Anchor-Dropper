@@ -54,6 +54,8 @@ def append_anchor(g, anchor_name, y):
     x = int(sum(xs) / len(xs))
     if "right" in anchor_name:
         x = min(xs) if "_" in anchor_name else max(xs)
+    elif "left" in anchor_name:
+        x = max(xs) if "_" in anchor_name else min(xs)
     g.appendAnchor(anchor_name, (x, y))
     
 def convert_gc_to_ad(path):

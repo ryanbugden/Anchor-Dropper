@@ -3,7 +3,7 @@ developer: Ryan Bugden
 developerURL: http://github.com/ryanbugden
 launchAtStartUp: false
 mainScript: main.py
-version: 0.9.1
+version: 0.9.2
 addToMenu:
 - path: main.py
   preferredName: Anchor Dropper
