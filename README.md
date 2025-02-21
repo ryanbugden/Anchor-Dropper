@@ -2,12 +2,12 @@
 
 A RoboFont extension that allows you to quickly add anchors to your font.
 
-## A warning of the tool’s biases
+### A warning of the tool’s biases
 - This is an extension that was built with beginner students of Latin-centric typeface design in mind.
 - This tool attempts to consolidate handling of anchors with their underscored counterpart (e.g. "top" and "_top") into one.
 - There are certain assumptions that are current hard-coded into the tool, such as the educated-guess x-positioning based on the glyph shape and anchor name, and the assumption that accent glyphs (e.g. acute, acutecmb) should get anchors which have an underscore at the beginning of their name.
 
-## User Interface
+## A tour of the interface
 
 ![](source/resources/ui-main.png)
 
