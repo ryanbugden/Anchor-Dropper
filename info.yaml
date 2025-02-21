@@ -4,7 +4,6 @@ developerURL: http://github.com/ryanbugden
 launchAtStartUp: false
 mainScript: main.py
 version: 0.9
-addToMenu:
 html: true
 timeStamp: 1638366053.720922
 requiresVersionMajor: '4'
