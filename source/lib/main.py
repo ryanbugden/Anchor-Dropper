@@ -558,8 +558,6 @@ class PreferencesController(ezui.WindowController):
             parent=parent,
             controller=self
         )
-        # for name in ['saveSettingsButton', 'loadSettingsButton', 'resetDefaultsButton']:
-        #     self.w.getItem(name).getNSButton().setBezelStyle_(13)
         self.w.setDefaultButton(self.w.getItem("closeButton"))
         prefs = getExtensionDefault(PREF_KEY, fallback=self.w.getItemValues())
         try: self.w.setItemValues(prefs)
@@ -680,7 +678,6 @@ class ClearAnchorsController(ezui.WindowController):
             parent=parent,
             controller=self
         )
-        # self.w.getItem('removeDupesButton').getNSButton().setBezelStyle_(11)
         self.w.setDefaultButton(self.w.getItem("closeButton"))
         self.fontSelectionRadiosCallback(self.w.getItem("fontSelectionRadios"))
 

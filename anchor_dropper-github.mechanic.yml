@@ -1,8 +1,0 @@
-extensionName: Anchor Dropper
-description: Quickly and easily add anchors to your font.
-developer: Ryan Bugden
-developerURL: http://github.com/ryanbugden
-repository: http://github.com/ryanbugden/Anchor-Dropper
-extensionPath: AnchorDropper.roboFontExt
-icon: https://raw.githubusercontent.com/ryanbugden/Anchor-Dropper/master/mechanic_icon.png
-tags: [anchors, diacritics, accents, glyphconstruction]

@@ -1,3 +1,5 @@
+<img src="source/resources/mechanic_icon.png"  width="80">
+
 # Anchor Dropper
 
 A RoboFont extension that allows you to quickly add anchors to your font.
