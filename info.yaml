@@ -4,6 +4,10 @@ developerURL: http://github.com/ryanbugden
 launchAtStartUp: false
 mainScript: main.py
 version: 0.9
+addToMenu:
+- path: main.py
+  preferredName: Anchor Dropper
+  shortKey: ""
 html: true
 timeStamp: 1638366053.720921
 requiresVersionMajor: '4'
