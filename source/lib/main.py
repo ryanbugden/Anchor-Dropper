@@ -40,6 +40,8 @@ def guess_y_pos(g_name, anchor_name):
         return 3  # Baseline
     elif "right" in anchor_name:
         return 0 if check_lowercase(g_name) else 1  # Ascender or Cap-Height
+    elif "top" in anchor_name and (".cap" in g_name or ".case" in g_name):
+        return 1  # Cap-Height 
     elif check_lowercase(g_name) or g_name in VALID_ANAMES or any(x in g_name for x in ["comb", "cmb"]):
         return 2  # X-Height
     else:
@@ -135,7 +137,7 @@ class AnchorDropper(ezui.WindowController):
         >> (+-)                           @mainTableAddRemoveButton
         >> (*)                            @settingsButton
         >> (Clear Anchors... )            @clearAnchorsButton
-        >> (Drop Anchors)                 @addAnchorsButton
+        >> (Drop Anchors)                 @dropAnchorsButton
         """
         
         # Make anchor name table items
@@ -148,7 +150,7 @@ class AnchorDropper(ezui.WindowController):
             clearAnchorsButton=dict(
                 width=main_button_w,
             ),
-            addAnchorsButton=dict(
+            dropAnchorsButton=dict(
                 width=main_button_w,
             ),
             anchorNameTable=dict(
@@ -372,18 +374,21 @@ class AnchorDropper(ezui.WindowController):
             anchorName="(Anchor Name)", 
             )
         table.appendItems([item])
+        self.update_main_table_items()
         
         
     def anchorNameTableAddRemoveButtonRemoveCallback(self, sender):
         table = self.w.getItem("anchorNameTable")
         table.removeSelectedItems()
         self.update_data()
+        self.update_main_table_items()
         
         
     def anchorNameTableDeleteCallback(self, sender):
         table = self.w.getItem("anchorNameTable")
         table.removeSelectedItems()
         self.update_data()
+        self.update_main_table_items()
         
 
     def mainTableAddRemoveButtonAddCallback(self, sender):
@@ -422,7 +427,7 @@ class AnchorDropper(ezui.WindowController):
             self.w_over.getItem("posInput").set(sel_item['y_pos'])
         
         
-    def addAnchorsButtonCallback(self, sender):
+    def dropAnchorsButtonCallback(self, sender):
         f = CurrentFont()
         if not f:
             print("Please open a UFO first.")
@@ -436,16 +441,18 @@ class AnchorDropper(ezui.WindowController):
                 if drop_anchor and g_name in f.keys():
                     g = f[g_name]
                     y = local_dimensions[y_pos] + int(y_adjust)
+                    prefix = ""
                     if g_name in VALID_ANAMES or "cmb" in g_name or "comb" in g_name: 
-                        anchor_name = "_" + anchor_name
-                    if overwrite or anchor_name not in [a.name for a in g.anchors]:
+                        prefix = "_"
+                    final_anchor_name = prefix + anchor_name
+                    if overwrite or final_anchor_name not in [a.name for a in g.anchors]:
                         if overwrite:
                             for a in g.anchors:
-                                if a.name == anchor_name:
+                                if a.name == final_anchor_name:
                                     g.removeAnchor(a)
                                     break
-                        append_anchor(g, anchor_name, y)
-                        report.setdefault(anchor_name, []).append((g.name, y))
+                        append_anchor(g, final_anchor_name, y)
+                        report.setdefault(final_anchor_name, []).append((g.name, y))
         f.changed()
         star_length = 40 
         print()
