@@ -25,6 +25,7 @@ ORGANIZED_GNAMES = {
     "bottom": {"C", "G", "K", "L", "N", "R", "S", "T", "c", "k", "l", "n", "r", "s", "t", "cedillacmb", "ogonekcmb"},
     "right":  {"L", "d", "l", "t", "caronSlovak"},
     }
+ASCENDERS = ["b", "d", "f", "h", "k", "l"]
 ORDERED_DIMENSIONS = ["Ascender", "Cap-Height", "X-Height", "Baseline", "Descender"]
 
 
@@ -36,14 +37,23 @@ def check_lowercase(g_name):
     return unicodedata.category(chr(uni_to_check)) == 'Ll'
     
 def guess_y_pos(g_name, anchor_name):
+    lowercase = check_lowercase(g_name)
     if "bottom" in anchor_name:
         return 3  # Baseline
     elif "right" in anchor_name:
-        return 0 if check_lowercase(g_name) else 1  # Ascender or Cap-Height
-    elif "top" in anchor_name and (".cap" in g_name or ".case" in g_name):
-        return 1  # Cap-Height 
-    elif check_lowercase(g_name) or g_name in VALID_ANAMES or any(x in g_name for x in ["comb", "cmb"]):
-        return 2  # X-Height
+        return 0 if lowercase else 1  # Ascender or Cap-Height
+    elif "top" in anchor_name:
+        if any(suffix in g_name for suffix in [".cap", ".case"]):
+            return 1  # Cap-Height 
+        elif lowercase:
+            if g_name in ASCENDERS:
+                return 0  # Ascender
+            else:
+                return 2  # X-Height
+        elif g_name in VALID_ANAMES or "cmb" in g_name:
+            return 2  # X-Height
+        else:
+            return 1  # Cap-Height 
     else:
         return 1  # Cap-Height
     
@@ -53,7 +63,7 @@ def append_anchor(g, anchor_name, y):
         xs = [x for (x, y) in intersection]
     else:
         xs = [g.width/2]
-    x = int(sum(xs) / len(xs))
+    x = int((min(xs) + max(xs))/2)
     if "right" in anchor_name:
         x = min(xs) if "_" in anchor_name else max(xs)
     elif "left" in anchor_name:
@@ -137,7 +147,7 @@ class AnchorDropper(ezui.WindowController):
         >> (+-)                           @mainTableAddRemoveButton
         >> (*)                            @settingsButton
         >> (Clear Anchors... )            @clearAnchorsButton
-        >> (Drop Anchors)                 @dropAnchorsButton
+        >> (Drop Anchors... )             @initialDropAnchorsButton
         """
         
         # Make anchor name table items
@@ -150,7 +160,7 @@ class AnchorDropper(ezui.WindowController):
             clearAnchorsButton=dict(
                 width=main_button_w,
             ),
-            dropAnchorsButton=dict(
+            initialDropAnchorsButton=dict(
                 width=main_button_w,
             ),
             anchorNameTable=dict(
@@ -427,44 +437,19 @@ class AnchorDropper(ezui.WindowController):
             self.w_over.getItem("posInput").set(sel_item['y_pos'])
         
         
-    def dropAnchorsButtonCallback(self, sender):
-        f = CurrentFont()
-        if not f:
-            print("Please open a UFO first.")
-            return
-        report = {}
-        overwrite = getExtensionDefault(PREF_KEY, fallback={'overwriteCheckbox': 0})['overwriteCheckbox']
-        local_dimensions = [f.info.ascender, f.info.capHeight, f.info.xHeight, 0, f.info.descender]
-        for anchor_name, data in self.internal_data.items():
-            for item in data:
-                drop_anchor, g_name, y_pos, y_adjust = item['drop_anchor'], item['glyph'], item['y_pos'], item['y_adjust']
-                if drop_anchor and g_name in f.keys():
-                    g = f[g_name]
-                    y = local_dimensions[y_pos] + int(y_adjust)
-                    prefix = ""
-                    if g_name in VALID_ANAMES or "cmb" in g_name or "comb" in g_name: 
-                        prefix = "_"
-                    final_anchor_name = prefix + anchor_name
-                    if overwrite or final_anchor_name not in [a.name for a in g.anchors]:
-                        if overwrite:
-                            for a in g.anchors:
-                                if a.name == final_anchor_name:
-                                    g.removeAnchor(a)
-                                    break
-                        append_anchor(g, final_anchor_name, y)
-                        report.setdefault(final_anchor_name, []).append((g.name, y))
-        f.changed()
-        star_length = 40 
-        print()
-        print("*"*star_length)
-        print("Anchor Dropper Report")
-        print("-"*star_length)
-        if report:
-            print("Dropped the following anchors:")
-            pprint(report)
+    def initialDropAnchorsButtonCallback(self, sender):
+        self.save_data()
+        if CurrentFont():
+            DropAnchorsController(self.w)
         else:
-            print("Didn't drop any new anchors.")
-        print("*"*star_length)
+            dontShowAgainMessage(
+                messageText='UFO Needed', 
+                informativeText='You must have a UFO open in order to drop some anchors.', 
+                alertStyle=1, 
+                parentWindow=self.w, 
+                resultCallback=None, 
+                dontShowAgainKey=''
+                )
 
                     
     def cancelButtonCallback(self, sender):
@@ -522,9 +507,6 @@ class PreferencesController(ezui.WindowController):
         content = """
         
         * VerticalStack                   @stack
-        > [ ] Overwrite Anchors             @overwriteCheckbox
-
-        > ---
         
         > (Save Settings)                 @saveSettingsButton
         > (Load Settings)                 @loadSettingsButton
@@ -532,14 +514,11 @@ class PreferencesController(ezui.WindowController):
         
         > ---
         ===
-        (Close)                         @closeButton
+        (Close)                           @closeButton
         """
         window_width = 150
         settings_button_height = 20
         descriptionData = dict(
-            overwriteCheckbox=dict(
-                width='fill'
-                ),
             closeButton=dict(
                 width=window_width,
                 keyEquivalent=chr(27)  # call button on esc keydown
@@ -568,15 +547,9 @@ class PreferencesController(ezui.WindowController):
             controller=self
         )
         self.w.setDefaultButton(self.w.getItem("closeButton"))
-        prefs = getExtensionDefault(PREF_KEY, fallback=self.w.getItemValues())
-        try: self.w.setItemValues(prefs)
-        except KeyError: pass
         
     def started(self):
         self.w.open()
-        
-    def destroy(self):
-        setExtensionDefault(PREF_KEY, self.w.getItemValues())
         
     def closeButtonCallback(self, sender):
         self.w.close()
@@ -584,8 +557,9 @@ class PreferencesController(ezui.WindowController):
     def saveSettingsButtonCallback(self, sender):
         data = self.parent.get_data()
         file_name = "settings"
-        if CurrentFont():
-            file_name = os.path.splitext(os.path.basename(CurrentFont().path))[0]
+        f = CurrentFont()
+        if f and f.path:
+            file_name = os.path.splitext(os.path.basename(f.path))[0]
         path = PutFile(
                     message="Save Anchor Drop settings.",
                     fileName=f"{file_name}.anchorDropperSettings"
@@ -764,6 +738,119 @@ class ClearAnchorsController(ezui.WindowController):
         table = self.w.getItem("anchorNameTable")
         table.set(anchor_names)
         table.reloadData()
+
+
+
+class DropAnchorsController(ezui.WindowController):
+
+    def build(self, parent):
+        self.parent = parent
+        content = """
+        * VerticalStack              @mainVerticalStack
+        
+        > (X) Current Font           @fontSelectionRadios                
+        > ( ) All Fonts
+        
+        > ---
+        > [X] Overwrite              @overwriteCheckbox  
+        ===
+        * VerticalStack
+        > (Drop Anchors)             @dropAnchorsButton
+        > (Close)                    @closeButton
+        """
+        
+        item_width = 140
+        descriptionData = dict(
+            overwriteCheckbox=dict(
+                width=item_width
+                ),
+            dropAnchorsButton=dict(
+                    width=item_width,
+                ),
+            closeButton=dict(
+                    width=item_width,
+                    keyEquivalent=chr(27)  # call button on esc keydown
+                ),
+            )
+        self.w = ezui.EZSheet(
+            content=content,
+            size='auto',
+            descriptionData=descriptionData,
+            parent=parent,
+            controller=self
+        )
+        prefs = getExtensionDefault(PREF_KEY, fallback=self.w.getItemValues())
+        try: self.w.setItemValues(prefs)
+        except KeyError: pass
+
+        self.w.setDefaultButton(self.w.getItem("dropAnchorsButton"))
+        self.update_font_span()
+        
+    def started(self):
+        self.w.open()
+        
+    def update_sheet_prefs(self):
+        setExtensionDefault(PREF_KEY, self.w.getItemValues())
+        
+    def closeButtonCallback(self, sender):
+        self.update_sheet_prefs()
+        self.w.close()
+        
+    def overwriteCheckboxCallback(self, sender):
+        self.update_sheet_prefs()
+        
+    def fontSelectionRadiosCallback(self, sender):
+        self.update_font_span()
+        self.update_sheet_prefs()
+
+    def update_font_span(self):
+        font_span = [[CurrentFont()], AllFonts()]
+        self.fonts = font_span[self.w.getItem("fontSelectionRadios").get()]
+        
+    def dropAnchorsButtonCallback(self, sender):
+        if not self.fonts:
+            print("Please open a UFO first.")
+            return
+        self.internal_data = getExtensionDefault(DATA_KEY, {})
+        star_length = 40 
+        print()
+        print("*"*star_length)
+        print("Anchor Dropper Report")
+        print("-"*star_length)
+        for f in self.fonts:
+            print(f"{f.info.familyName} {f.info.styleName}")
+            print("-"*star_length)
+            report = {}
+            overwrite = getExtensionDefault(PREF_KEY, fallback={'overwriteCheckbox': 0})['overwriteCheckbox']
+            local_dimensions = [f.info.ascender, f.info.capHeight, f.info.xHeight, 0, f.info.descender]
+            for anchor_name, data in self.internal_data.items():
+                for item in data:
+                    drop_anchor, g_name, y_pos, y_adjust = item['drop_anchor'], item['glyph'], item['y_pos'], item['y_adjust']
+                    if drop_anchor and g_name in f.keys():
+                        g = f[g_name]
+                        y = local_dimensions[y_pos] + int(y_adjust)
+                        prefix = ""
+                        if g_name in VALID_ANAMES or "cmb" in g_name: 
+                            prefix = "_"
+                        final_anchor_name = prefix + anchor_name
+                        if overwrite or final_anchor_name not in [a.name for a in g.anchors]:
+                            if overwrite:
+                                for a in g.anchors:
+                                    if a.name == final_anchor_name:
+                                        g.removeAnchor(a)
+                                        break
+                            append_anchor(g, final_anchor_name, y)
+                            report.setdefault(final_anchor_name, []).append((g.name, y))
+            f.changed()
+            if report:
+                print("Dropped the following anchors:")
+                pprint(report)
+                print()
+            else:
+                print("Didn't drop any new anchors.")
+                print()
+            print("*"*star_length)
+        self.w.close()
         
 
     
