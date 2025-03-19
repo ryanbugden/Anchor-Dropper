@@ -229,8 +229,8 @@ class AnchorDropper(ezui.WindowController):
         self.w = ezui.EZWindow(
             title="Anchor Dropper",
             minSize=(anchor_name_table_w + main_table_w + 20, 300),
+            size=   (anchor_name_table_w + main_table_w + 20, 500),
             maxSize=(anchor_name_table_w + main_table_w + 20, 1200),
-            size=(anchor_name_table_w + main_table_w + 20, 500),
             content=content,
             descriptionData=descriptionData,
             controller=self
@@ -430,7 +430,7 @@ class AnchorDropper(ezui.WindowController):
         indexes = table.getSelectedIndexes()
         if indexes:
             target_index = int((min(indexes) + max(indexes)) / 2) + 1
-            table.scrollToIndex(target_index)
+            target_index = min([target_index, 7])
             table.openPopoverAtIndex(self.w_over, target_index)
             # Predict correct y-pos
             sel_item = table.getSelectedItems()[0]
@@ -457,19 +457,16 @@ class AnchorDropper(ezui.WindowController):
         
         
     def posInputCallback(self, sender):
-        # Do value changing here
         table = self.w.getItem("mainTable")
-        pos_value = self.w_over.getItem("posInput").get()
         for i in table.getSelectedIndexes():
-            table.setItemValue(i, "y_pos", pos_value)
+            table.setItemValue(i, "y_pos", sender.get())
         table.reloadData(table.getSelectedIndexes())
         
         
     def adjustInputCallback(self, sender):
         table = self.w.getItem("mainTable")
-        adj_value = self.w_over.getItem("adjustInput").get()
         for i in table.getSelectedIndexes():
-            table.setItemValue(i, "y_adjust", adj_value)
+            table.setItemValue(i, "y_adjust", sender.get())
         table.reloadData(table.getSelectedIndexes())
         
         
