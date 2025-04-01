@@ -226,11 +226,12 @@ class AnchorDropper(ezui.WindowController):
                 ]
             ),
         )
+        extra_width = 51  # To avoid vanilla size error: VanillaWarning: The window's initial size is bigger than the `maxSize`.
         self.w = ezui.EZWindow(
             title="Anchor Dropper",
-            minSize=(anchor_name_table_w + main_table_w + 20, 300),
-            size=   (anchor_name_table_w + main_table_w + 20, 500),
-            maxSize=(anchor_name_table_w + main_table_w + 20, 1200),
+            minSize=(anchor_name_table_w + main_table_w + extra_width, 300),
+            size=   (anchor_name_table_w + main_table_w + extra_width, 500),
+            maxSize=(anchor_name_table_w + main_table_w + extra_width, 1200),
             content=content,
             descriptionData=descriptionData,
             controller=self
@@ -244,7 +245,6 @@ class AnchorDropper(ezui.WindowController):
         self.w.load_data_from_key = self.load_data_from_key
         self.w.get_data = self.get_data
         self.load_data_from_key()
-
         
         # POPOVER
         content = """
@@ -458,24 +458,51 @@ class AnchorDropper(ezui.WindowController):
         
     def posInputCallback(self, sender):
         table = self.w.getItem("mainTable")
-        for i in table.getSelectedIndexes():
-            table.setItemValue(i, "y_pos", sender.get())
-        table.reloadData(table.getSelectedIndexes())
-        
-        
+        indexes = table.getSelectedIndexes()
+        if indexes:
+            # Get current table data
+            table_data = table.get()
+            for i in indexes:
+                table_data[i]["y_pos"] = sender.get()
+            # Update table with new data
+            table.set(table_data)
+            table.reloadData(indexes)
+            # Reselect indexes
+            table.setSelectedIndexes(indexes)
+            self.update_data()
+
+            
     def adjustInputCallback(self, sender):
         table = self.w.getItem("mainTable")
-        for i in table.getSelectedIndexes():
-            table.setItemValue(i, "y_adjust", sender.get())
-        table.reloadData(table.getSelectedIndexes())
-        
-        
+        indexes = table.getSelectedIndexes()
+        if indexes:
+            # Get current table data
+            table_data = table.get()
+            for i in indexes:
+                table_data[i]["y_adjust"] = sender.get()
+            # Update table with new data
+            table.set(table_data)
+            table.reloadData(indexes)
+            # Reselect indexes
+            table.setSelectedIndexes(indexes)
+            self.update_data()
+            
+
     def toggleAddButtonCallback(self, sender):
         table = self.w.getItem("mainTable")
-        current_value = table.getItemValue(table.getSelectedIndexes()[0], "drop_anchor")
-        for i in table.getSelectedIndexes():
-            table.setItemValue(i, "drop_anchor", not current_value)
-        table.reloadData(table.getSelectedIndexes())
+        indexes = table.getSelectedIndexes()
+        if indexes:
+            # Get current table data
+            table_data = table.get()
+            current_value = table_data[indexes[0]]["drop_anchor"]
+            for i in indexes:
+                table_data[i]["drop_anchor"] = not current_value
+            # Update table with new data
+            table.set(table_data)
+            table.reloadData(indexes)
+            # Reselect indexes
+            table.setSelectedIndexes(indexes)
+            self.update_data()
         
         
     def clearAnchorsButtonCallback(self, sender):
@@ -729,6 +756,7 @@ class ClearAnchorsController(ezui.WindowController):
         font_span = [[CurrentFont()], AllFonts()]
         self.fonts = font_span[sender.get()]
         self.update_anchor_table_items()
+        
         
     def update_anchor_table_items(self):
         anchor_names = set([a.name.lstrip('_') for f in self.fonts for g in f for a in g.anchors])
