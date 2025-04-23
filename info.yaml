@@ -1,9 +1,9 @@
 name: Anchor Dropper
 developer: Ryan Bugden
-developerURL: http://github.com/ryanbugden
+developerURL: http://ryanbugden.com
 launchAtStartUp: false
 mainScript: main.py
-version: 1.0b
+version: 1.0b2
 addToMenu:
 - path: main.py
   preferredName: Anchor Dropper

@@ -293,22 +293,17 @@ class AnchorDropper(ezui.WindowController):
             parentAlignment='right',
             controller=self
         )
-
     
-
     def started(self):
         self.w.open()
         
-        
     def destroy(self):
         self.save_data()
-        
         
     def load_data(self, data):
         '''Loads provided data.'''
         setExtensionDefault(DATA_KEY, data)
         self.load_data_from_key()
-        
         
     def load_data_from_key(self):
         '''Loads the extension defaults.'''
@@ -316,18 +311,15 @@ class AnchorDropper(ezui.WindowController):
         self.update_anchor_table_items()
         self.update_main_table_items()
         
-        
     def get_data(self):
         return self.internal_data
         
-
     def save_data(self):
         '''Saves the internal data to the extension defaults, for use when reopening.'''
         self.update_data()
         # pprint(self.internal_data)
         setExtensionDefault(DATA_KEY, self.internal_data)
 
-        
     def update_data(self):
         '''Updates the internal data based on the UI info.'''
         # Get all anchor names from the anchor name table
@@ -343,7 +335,6 @@ class AnchorDropper(ezui.WindowController):
             if anchor_name not in [item['anchorName'] for item in self.w.getItem("anchorNameTable").get()]:
                 self.internal_data.pop(anchor_name)
 
-
     def update_anchor_table_items(self):
         table = self.w.getItem("anchorNameTable")
         if self.internal_data.keys():
@@ -358,7 +349,6 @@ class AnchorDropper(ezui.WindowController):
             if table.get():
                 table.setSelectedIndexes([0])
             
-
     def update_main_table_items(self):
         sel = self.w.getItem("anchorNameTable").getSelectedItems()
         if sel:
@@ -373,10 +363,8 @@ class AnchorDropper(ezui.WindowController):
             self.w.getItem("mainTable").set([])
             self.w.getItem("mainTableAddRemoveButton").enable(False)
             
-
     def anchorNameTableSelectionCallback(self, sender):
         self.update_main_table_items()
-        
         
     def anchorNameTableAddRemoveButtonAddCallback(self, sender):
         table = self.w.getItem("anchorNameTable")
@@ -386,13 +374,11 @@ class AnchorDropper(ezui.WindowController):
         table.appendItems([item])
         self.update_main_table_items()
         
-        
     def anchorNameTableAddRemoveButtonRemoveCallback(self, sender):
         table = self.w.getItem("anchorNameTable")
         table.removeSelectedItems()
         self.update_data()
         self.update_main_table_items()
-        
         
     def anchorNameTableDeleteCallback(self, sender):
         table = self.w.getItem("anchorNameTable")
@@ -400,7 +386,6 @@ class AnchorDropper(ezui.WindowController):
         self.update_data()
         self.update_main_table_items()
         
-
     def mainTableAddRemoveButtonAddCallback(self, sender):
         table = self.w.getItem("mainTable")
         item = table.makeItem(
@@ -412,18 +397,15 @@ class AnchorDropper(ezui.WindowController):
         table.appendItems([item])
         self.update_data()
 
-
     def mainTableAddRemoveButtonRemoveCallback(self, sender):
         table = self.w.getItem("mainTable")
         table.removeSelectedItems()
         self.update_data()
         
-        
     def mainTableDeleteCallback(self, sender):
         table = self.w.getItem("mainTable")
         table.removeSelectedItems()
         self.update_data()
-        
         
     def mainTableMenuCallback(self, sender):
         table = self.w.getItem("mainTable")
@@ -431,11 +413,11 @@ class AnchorDropper(ezui.WindowController):
         if indexes:
             target_index = int((min(indexes) + max(indexes)) / 2) + 1
             target_index = min([target_index, 7])
-            table.openPopoverAtIndex(self.w_over, target_index)
             # Predict correct y-pos
             sel_item = table.getSelectedItems()[0]
             self.w_over.getItem("posInput").set(sel_item['y_pos'])
-        
+            self.w_over.getItem("adjustInput").set(int(sel_item['y_adjust']))
+            table.openPopoverAtIndex(self.w_over, target_index)
         
     def initialDropAnchorsButtonCallback(self, sender):
         self.save_data()
@@ -451,10 +433,8 @@ class AnchorDropper(ezui.WindowController):
                 dontShowAgainKey=''
                 )
 
-                    
     def cancelButtonCallback(self, sender):
         self.w_over.close()
-        
         
     def posInputCallback(self, sender):
         table = self.w.getItem("mainTable")
@@ -471,7 +451,6 @@ class AnchorDropper(ezui.WindowController):
             table.setSelectedIndexes(indexes)
             self.update_data()
 
-            
     def adjustInputCallback(self, sender):
         table = self.w.getItem("mainTable")
         indexes = table.getSelectedIndexes()
@@ -487,7 +466,6 @@ class AnchorDropper(ezui.WindowController):
             table.setSelectedIndexes(indexes)
             self.update_data()
             
-
     def toggleAddButtonCallback(self, sender):
         table = self.w.getItem("mainTable")
         indexes = table.getSelectedIndexes()
@@ -504,7 +482,6 @@ class AnchorDropper(ezui.WindowController):
             table.setSelectedIndexes(indexes)
             self.update_data()
         
-        
     def clearAnchorsButtonCallback(self, sender):
         if CurrentFont():
             ClearAnchorsController(self.w)
@@ -518,7 +495,6 @@ class AnchorDropper(ezui.WindowController):
                 dontShowAgainKey=''
                 )
 
-        
     def settingsButtonCallback(self, sender):
         PreferencesController(self.w)
         
@@ -585,13 +561,22 @@ class PreferencesController(ezui.WindowController):
         if f and f.path:
             file_name = os.path.splitext(os.path.basename(f.path))[0]
         path = PutFile(
-                    message="Save Anchor Drop settings.",
+                    message="Save Anchor Dropper settings.",
                     fileName=f"{file_name}.anchorDropperSettings"
                     )
         if not path:
             return
         with open(path, "w") as j:
-            json.dump(data, j, indent=4)
+            json.dump(
+                data,
+                j,
+                indent=4,
+                # Normalize from NS objects into json-compatible things
+                default=lambda o: dict(o) if hasattr(o, "items")
+                                    else list(o) if hasattr(o, "__iter__")
+                                    else str(o)
+            )
+        self.w.close()
         
     def loadSettingsButtonCallback(self, sender):
         current_data = self.parent.get_data().copy()

@@ -19,11 +19,4 @@ modified_content = content.replace('source/', '../')
 with open('source/html/index.md', 'w', encoding='utf-8') as file:
     file.write(modified_content)
 
-# Convert markdown to HTML and save as index.html
-markdown.markdownFromFile(
-    input='source/html/index.md',
-    output='source/html/index.html',
-    encoding='utf-8'
-)
-
 print("Files have been successfully created and modified.")
