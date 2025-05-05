@@ -736,7 +736,7 @@ class ClearAnchorsController(ezui.WindowController):
             for g in f:
                 uniques = []
                 for a in g.anchors:
-                    if a.name not in names:
+                    if a.name.lstrip('_') not in names:
                         continue
                     if a.name not in uniques:
                         uniques.append(a.name)
