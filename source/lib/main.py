@@ -628,22 +628,23 @@ class ClearAnchorsController(ezui.WindowController):
     def build(self, parent):
         self.parent = parent
         content = """
-        (X) Current Font  @fontSelectionRadios                
+        (X) Current Font             @fontSelectionRadios                
         ( ) All Fonts
-        
+
         ---
         
-        !* Select and use Delete key to remove anchors
+        !* Select and remove anchors by name:
         
-        |--------|        @anchorNameTable
+        |--------|                   @anchorNameTable
         |        |   
         |--------|   
         
-        ---
+        (Clear All)                  @removeAnchorsButton
+        (Clear All Duplicates)       @removeDupesButton
+
         ===
         * VerticalStack
-        > (Remove Duplicate Anchors) @removeDupesButton
-        
+        > ---
         > (Close)                    @closeButton
         """
         
@@ -654,6 +655,9 @@ class ClearAnchorsController(ezui.WindowController):
                     items=[],
                     allowsMultipleSelection=True,
                     enableDelete=True,
+                ),
+            removeAnchorsButton=dict(
+                    width=anchor_name_table_w,
                 ),
             removeDupesButton=dict(
                     width=anchor_name_table_w,
@@ -672,7 +676,6 @@ class ClearAnchorsController(ezui.WindowController):
         )
         self.w.setDefaultButton(self.w.getItem("closeButton"))
         self.fontSelectionRadiosCallback(self.w.getItem("fontSelectionRadios"))
-
         
     def started(self):
         self.w.open()
@@ -680,10 +683,23 @@ class ClearAnchorsController(ezui.WindowController):
     def closeButtonCallback(self, sender):
         self.w.close()
         
+    def anchorNameTableSelectionCallback(self, sender):
+        '''Updates button text based on table selection.'''
+        message = "Selected" if sender.getSelectedItems() else "All"
+        self.w.getItem("removeAnchorsButton").setTitle(f"Clear {message}")
+        self.w.getItem("removeDupesButton").setTitle(f"Clear {message} Duplicates")
+        
     def anchorNameTableDeleteCallback(self, sender):
+        self.remove_anchors()
+        
+    def removeAnchorsButtonCallback(self, sender):
+        self.remove_anchors()
+        
+    def remove_anchors(self):
         table = self.w.getItem("anchorNameTable")
         if not table.getSelectedItems():
-            return
+            # If no selection, remove all
+            table.set([])
         table.removeSelectedItems()
         # Delete those anchors
         removed = {}
@@ -694,6 +710,8 @@ class ClearAnchorsController(ezui.WindowController):
                 for a in g.anchors:
                     if a.name.lstrip('_') not in table.get():
                         g.removeAnchor(a)
+                        if g == CurrentGlyph():
+                            g.changed()
                         removed[font_name].setdefault(a.name, []).append(g.name)
             f.changed()
         star_length = 40 
@@ -708,9 +726,9 @@ class ClearAnchorsController(ezui.WindowController):
             print("Didn't remove any anchors.")
         print("*"*star_length)
         
-        
     def removeDupesButtonCallback(self, sender):
-        # Delete those anchors
+        table = self.w.getItem("anchorNameTable")
+        names = table.getSelectedItems() if table.getSelectedItems() else table.get()
         removed = {}
         for f in self.fonts:
             font_name = " ".join([f.info.familyName, f.info.styleName])
@@ -718,9 +736,14 @@ class ClearAnchorsController(ezui.WindowController):
             for g in f:
                 uniques = []
                 for a in g.anchors:
+                    if a.name not in names:
+                        continue
                     if a.name not in uniques:
                         uniques.append(a.name)
                     else:
+                        g.removeAnchor(a)
+                        if g == CurrentGlyph():
+                            g.changed()
                         removed[font_name].setdefault(a.name, []).append(g.name)
             f.changed()
         star_length = 40 
@@ -732,7 +755,10 @@ class ClearAnchorsController(ezui.WindowController):
             print("Removed the following anchors:")
             pprint(removed)
         else:
-            print("There were no duplicate anchors.")
+            if table.getSelectedItems():
+                print(f"There were no duplicate anchors with names: {names}.")
+            else:
+                print(f"There were no duplicate anchors.")
         print("*"*star_length)
         
         
