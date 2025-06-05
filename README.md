@@ -31,8 +31,6 @@ This is where you define which glyphs will get the anchor that is currently sele
 ### Settings
 This is where you can control the settings for the extension.
 ![](source/resources/ui-settings.png)
-#### Overwrite Anchors
-If you check this box, anchors of the same name in the same glyph will be overwritten when added to your font.
 
 | Operation | Description |
 | --- | --- |
@@ -41,15 +39,27 @@ If you check this box, anchors of the same name in the same glyph will be overwr
 | **Reset Defaults** | This resets the anchor/glyph settings in the extension to how it looked when you first installed and opened it. |
 
 ### Clear Anchors...
-This is where you can bulk-remove anchors from your font(s). ![](source/resources/ui-clear_anchors.png)
+This is where you can bulk-remove anchors from your font(s). 
+
+![](source/resources/ui-clear_anchors-all.png)
+![](source/resources/ui-clear_anchors-selected.png)
 
 Choose whether you’d like to remove the anchors from the Current Font or All Fonts, and go through the list of anchor names and hit delete. Be advised: the removal will happen instantaneously! Again, Anchor Dropper attempts to remove "\_" anchors as well (so removing "top" will also remove "\_top").
 
-#### Remove Duplicate Anchors
-This button will look at each glyph and make sure you don’t have two anchors of the same name present.
+#### Clear (Selected / All)
+If you have something selected in the table, this button will remove all anchors with the names selected.
 
-### Drop Anchors
-This button will add the anchors to your Current Font.
+If you *do not* have something selected in the table, this button will remove all anchors.
+
+#### Clear (Selected / All) Duplicates
+If you have something selected in the table, this button will remove anchors that are duplicates, only among the names selected.
+
+If you *do not* have something selected in the table, this button will remove anchors that are duplicates.
+
+### Drop Anchors...
+This button will add the anchors to your font(s). Before clicking *Drop Anchors*, choose whether you’d like the add the anchors in question to your current font only or all open fonts. Also specify whether, when adding anchors, you’d like them to overwrite anchors of the same name in the same glyph.
+
+![](source/resources/ui-drop_anchors.png)
 
 
 ## Special Thanks
