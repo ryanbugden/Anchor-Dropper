@@ -248,11 +248,9 @@ class AnchorDropper(ezui.WindowController):
         
         # POPOVER
         content = """
-        (Toggle Checkbox)     @toggleAddButton
-        
-        ---
-        
         * TwoColumnForm       @form
+        > : Drop Anchor:
+        > [X]                 @dropCheckbox
         > : Y Position:
         > ( ...)              @posInput
         > : Y Adjustment:
@@ -415,6 +413,7 @@ class AnchorDropper(ezui.WindowController):
             target_index = min([target_index, 7])
             # Predict correct y-pos
             sel_item = table.getSelectedItems()[0]
+            self.w_over.getItem("dropCheckbox").set(sel_item['drop_anchor'])
             self.w_over.getItem("posInput").set(sel_item['y_pos'])
             self.w_over.getItem("adjustInput").set(int(sel_item['y_adjust']))
             table.openPopoverAtIndex(self.w_over, target_index)
@@ -466,15 +465,14 @@ class AnchorDropper(ezui.WindowController):
             table.setSelectedIndexes(indexes)
             self.update_data()
             
-    def toggleAddButtonCallback(self, sender):
+    def dropCheckboxCallback(self, sender):
         table = self.w.getItem("mainTable")
         indexes = table.getSelectedIndexes()
         if indexes:
             # Get current table data
             table_data = table.get()
-            current_value = table_data[indexes[0]]["drop_anchor"]
             for i in indexes:
-                table_data[i]["drop_anchor"] = not current_value
+                table_data[i]["drop_anchor"] = sender.get()
             # Update table with new data
             table.set(table_data)
             table.reloadData(indexes)
