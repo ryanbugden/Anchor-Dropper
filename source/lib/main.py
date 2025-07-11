@@ -38,7 +38,7 @@ def check_lowercase(g_name):
     
 def guess_y_pos(g_name, anchor_name):
     lowercase = check_lowercase(g_name)
-    if "bottom" in anchor_name:
+    if "bottom" in anchor_name or "ogonek" in anchor_name:
         return 3  # Baseline
     elif "right" in anchor_name:
         return 0 if lowercase else 1  # Ascender or Cap-Height
@@ -555,13 +555,16 @@ class PreferencesController(ezui.WindowController):
     def saveSettingsButtonCallback(self, sender):
         data = self.parent.get_data()
         file_name = "settings"
+        ext = "anchorDropperSettings"
         f = CurrentFont()
         if f and f.path:
             file_name = os.path.splitext(os.path.basename(f.path))[0]
         path = PutFile(
                     message="Save Anchor Dropper settings.",
-                    fileName=f"{file_name}.anchorDropperSettings"
+                    fileName=f"{file_name}.{ext}"
                     )
+        if path.split(".")[-1] != ext:
+            path = path.rstrip(".") + "." + ext
         if not path:
             return
         with open(path, "w") as j:
