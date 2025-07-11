@@ -57,8 +57,9 @@ def guess_y_pos(g_name, anchor_name):
     else:
         return 1  # Cap-Height
     
-def append_anchor(g, anchor_name, y):
-    intersection = IntersectGlyphWithLine(g, ((-50, y),(g.width + 50, y)))
+def append_anchor(g, anchor_name, base_y, adjusted_y):
+    # Use the base y (font dimension) to determine x position before adjusting the y.
+    intersection = IntersectGlyphWithLine(g, ((-50, base_y),(g.width + 50, base_y)))
     if intersection:
         xs = [x for (x, y) in intersection]
     else:
@@ -68,7 +69,7 @@ def append_anchor(g, anchor_name, y):
         x = min(xs) if "_" in anchor_name else max(xs)
     elif "left" in anchor_name:
         x = max(xs) if "_" in anchor_name else min(xs)
-    g.appendAnchor(anchor_name, (x, y))
+    g.appendAnchor(anchor_name, (x, adjusted_y))
     
 def convert_gc_to_ad(path):
     '''
@@ -865,7 +866,8 @@ class DropAnchorsController(ezui.WindowController):
                     drop_anchor, g_name, y_pos, y_adjust = item['drop_anchor'], item['glyph'], item['y_pos'], item['y_adjust']
                     if drop_anchor and g_name in f.keys():
                         g = f[g_name]
-                        y = local_dimensions[y_pos] + int(y_adjust)
+                        base_y = local_dimensions[y_pos]
+                        adjusted_y = base_y + int(y_adjust)
                         prefix = ""
                         if g_name in VALID_ANAMES or "cmb" in g_name: 
                             prefix = "_"
@@ -876,8 +878,8 @@ class DropAnchorsController(ezui.WindowController):
                                     if a.name == final_anchor_name:
                                         g.removeAnchor(a)
                                         break
-                            append_anchor(g, final_anchor_name, y)
-                            report.setdefault(final_anchor_name, []).append((g.name, y))
+                            append_anchor(g, final_anchor_name, base_y, adjusted_y)
+                            report.setdefault(final_anchor_name, []).append((g.name, adjusted_y))
             f.changed()
             if report:
                 print("Dropped the following anchors:")
