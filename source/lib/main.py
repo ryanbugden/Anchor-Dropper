@@ -91,7 +91,7 @@ def convert_gc_to_ad(path):
         # Ignore constructions that don't reference an anchor name
         if "@" not in construction:
             continue
-        base_g_name = construction.split()[2]
+        base_g_name = construction.split()[2].split("@")[0]
         accent_name = construction.split()[4]
         anchor_name = construction.split("@")[-1].split()[0].strip(",")
 
