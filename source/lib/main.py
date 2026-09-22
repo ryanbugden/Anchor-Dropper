@@ -891,4 +891,4 @@ class DropAnchorsController(ezui.WindowController):
         self.w.close()
 
 
-AnchorDropper()
+OpenWindow(AnchorDropper)
